@@ -8,29 +8,41 @@ const router = express.Router();
 
 // Helper function to query users
 const queryUser = async (email) => {
-  const supabase = getSupabase();
-  
-  // Always use Supabase if available
-  if (supabase) {
+  // Force Supabase if environment variables are set
+  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true') {
+    const supabase = getSupabase();
+    if (!supabase) {
+      console.error('❌ Supabase URL configured but client is null. Check SUPABASE_ANON_KEY.');
+      throw new Error('Supabase client not available. Please check your environment variables.');
+    }
+    
     try {
+      console.log('🔍 Querying user with Supabase:', email);
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('email', email)
         .maybeSingle(); // Use maybeSingle to handle not found gracefully
       
-      if (error && error.code !== 'PGRST116') {
-        console.error('Supabase queryUser error:', error);
+      if (error) {
+        console.error('❌ Supabase queryUser error:', error);
+        // PGRST116 = table doesn't exist, which is OK if tables haven't been created yet
+        if (error.code === 'PGRST116') {
+          return { rows: [] };
+        }
         throw error;
       }
+      
+      console.log('✅ User found with Supabase:', data ? 'yes' : 'no');
       return { rows: data ? [data] : [] };
     } catch (err) {
-      console.error('Error querying user with Supabase:', err);
+      console.error('❌ Error querying user with Supabase:', err);
       throw err;
     }
   }
   
-  // Fallback to PostgreSQL only if Supabase is not available
+  // Fallback to PostgreSQL only if Supabase is not configured
+  console.warn('⚠️ Using PostgreSQL fallback. Supabase should be configured.');
   const pool = getPool();
   if (!pool) {
     throw new Error('No database connection available. Please configure Supabase or PostgreSQL.');
@@ -39,10 +51,13 @@ const queryUser = async (email) => {
 };
 
 const queryUserById = async (id) => {
-  const supabase = getSupabase();
-  
-  // Always use Supabase if available
-  if (supabase) {
+  // Force Supabase if environment variables are set
+  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true') {
+    const supabase = getSupabase();
+    if (!supabase) {
+      throw new Error('Supabase client not available. Please check your environment variables.');
+    }
+    
     try {
       const { data, error } = await supabase
         .from('users')
@@ -51,17 +66,17 @@ const queryUserById = async (id) => {
         .single();
       
       if (error) {
-        console.error('Supabase queryUserById error:', error);
+        console.error('❌ Supabase queryUserById error:', error);
         throw error;
       }
       return { rows: data ? [data] : [] };
     } catch (err) {
-      console.error('Error querying user by ID with Supabase:', err);
+      console.error('❌ Error querying user by ID with Supabase:', err);
       throw err;
     }
   }
   
-  // Fallback to PostgreSQL only if Supabase is not available
+  // Fallback to PostgreSQL only if Supabase is not configured
   const pool = getPool();
   if (!pool) {
     throw new Error('No database connection available. Please configure Supabase or PostgreSQL.');
