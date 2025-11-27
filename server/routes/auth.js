@@ -9,42 +9,61 @@ const router = express.Router();
 // Helper function to query users
 const queryUser = async (email) => {
   const dbType = getDatabaseType();
+  const supabase = getSupabase();
   
-  if (dbType === 'supabase') {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-    
-    if (error && error.code !== 'PGRST116') {
-      throw error;
+  // Force Supabase if URL is configured
+  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle(); // Use maybeSingle to handle not found gracefully
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error('Supabase queryUser error:', error);
+        throw error;
+      }
+      return { rows: data ? [data] : [] };
+    } catch (err) {
+      console.error('Error querying user with Supabase:', err);
+      throw err;
     }
-    return { rows: data ? [data] : [] };
   } else {
     const pool = getPool();
+    if (!pool) {
+      throw new Error('No database connection available. Please configure Supabase or PostgreSQL.');
+    }
     return await pool.query('SELECT * FROM users WHERE email = $1', [email]);
   }
 };
 
 const queryUserById = async (id) => {
-  const dbType = getDatabaseType();
+  const supabase = getSupabase();
   
-  if (dbType === 'supabase') {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, first_name, last_name, role, chantier_id, phone')
-      .eq('id', id)
-      .single();
-    
-    if (error) {
-      throw error;
+  // Force Supabase if URL is configured
+  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, email, first_name, last_name, role, chantier_id, phone')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error('Supabase queryUserById error:', error);
+        throw error;
+      }
+      return { rows: data ? [data] : [] };
+    } catch (err) {
+      console.error('Error querying user by ID with Supabase:', err);
+      throw err;
     }
-    return { rows: data ? [data] : [] };
   } else {
     const pool = getPool();
+    if (!pool) {
+      throw new Error('No database connection available. Please configure Supabase or PostgreSQL.');
+    }
     return await pool.query(
       'SELECT id, email, first_name, last_name, role, chantier_id, phone FROM users WHERE id = $1',
       [id]
