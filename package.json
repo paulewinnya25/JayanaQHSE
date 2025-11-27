@@ -1,0 +1,31 @@
+{
+  "name": "jayana-qhse",
+  "version": "1.0.0",
+  "description": "Application QHSE pour le BTP - Projet Jayana",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm install --workspace=client && npm install --workspace=server",
+    "start:client": "npm start --workspace=client",
+    "start:server": "npm start --workspace=server",
+    "dev:client": "npm start --workspace=client",
+    "dev:server": "npm run dev --workspace=server",
+    "build:client": "npm run build --workspace=client",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "qhse",
+    "btp",
+    "jayana"
+  ],
+  "author": "",
+  "license": "ISC"
+}
+
