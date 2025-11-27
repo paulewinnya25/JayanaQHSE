@@ -18,8 +18,12 @@ if (USE_SUPABASE || process.env.SUPABASE_URL) {
   try {
     const { supabase: supabaseClient } = require('./supabase');
     supabase = supabaseClient;
-    databaseType = 'supabase';
-    console.log('✅ Using Supabase database');
+    if (supabase) {
+      databaseType = 'supabase';
+      console.log('✅ Using Supabase database');
+    } else {
+      console.error('❌ Supabase client is null after initialization');
+    }
   } catch (error) {
     console.error('❌ Error initializing Supabase, falling back to PostgreSQL:', error);
     console.error('Error details:', error.message, error.stack);
@@ -28,8 +32,8 @@ if (USE_SUPABASE || process.env.SUPABASE_URL) {
   console.log('⚠️ Supabase not configured. USE_SUPABASE:', process.env.USE_SUPABASE, 'SUPABASE_URL:', process.env.SUPABASE_URL);
 }
 
-// Sinon, utiliser PostgreSQL directement (seulement si Supabase n'est PAS configuré)
-if (!supabase && !USE_SUPABASE) {
+// Ne créer le pool PostgreSQL que si Supabase n'est PAS configuré
+if (!supabase && (!USE_SUPABASE && !process.env.SUPABASE_URL)) {
   try {
     const { Pool } = require('pg');
     pool = new Pool({
