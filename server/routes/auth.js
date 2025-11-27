@@ -152,8 +152,15 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
   try {
+    console.log('🔐 Login attempt received:', { email: req.body.email, timestamp: new Date().toISOString() });
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      console.log('❌ Missing email or password');
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    console.log('🔍 Querying user for login:', email);
     const result = await queryUser(email);
     
     if (result.rows.length === 0) {

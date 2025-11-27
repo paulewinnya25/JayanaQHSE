@@ -19,6 +19,15 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Logging middleware for debugging
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.path}`, { 
+    body: req.method === 'POST' ? { ...req.body, password: req.body.password ? '***' : undefined } : undefined,
+    timestamp: new Date().toISOString()
+  });
+  next();
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/dashboard', require('./routes/dashboard'));
