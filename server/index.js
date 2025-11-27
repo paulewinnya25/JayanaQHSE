@@ -46,10 +46,28 @@ app.use('/api/trainings', require('./routes/trainings'));
 // Health check
 app.get('/api/health', async (req, res) => {
   const dbType = getDatabaseType();
+  const supabase = getSupabase();
+  
+  // Force check if Supabase is actually configured
+  const actualDbType = (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true') && supabase ? 'supabase' : dbType;
+  
+  console.log('🏥 Health check:', { 
+    dbType, 
+    actualDbType, 
+    hasSupabase: !!supabase,
+    useSupabaseEnv: process.env.USE_SUPABASE,
+    supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'NOT SET'
+  });
+  
   res.json({ 
     status: 'OK', 
     message: 'Jayana qhse API is running',
-    database: dbType
+    database: actualDbType,
+    supabaseConfigured: !!supabase,
+    environment: {
+      USE_SUPABASE: process.env.USE_SUPABASE,
+      SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET'
+    }
   });
 });
 
