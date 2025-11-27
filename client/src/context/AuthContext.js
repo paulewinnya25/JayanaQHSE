@@ -13,9 +13,16 @@ export const useAuth = () => {
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-// Log pour le debug (sera supprimé en production)
-if (process.env.NODE_ENV === 'development') {
-  console.log('🔗 API URL configured:', API_URL);
+// Vérifier si l'URL est valide (pas une URL d'exemple)
+const isExampleURL = API_URL.includes('votre-backend-url') || API_URL.includes('example.com') || API_URL.includes('placeholder');
+
+// Log pour le debug
+console.log('🔗 API URL configured:', API_URL);
+if (isExampleURL) {
+  console.warn('⚠️ ATTENTION: URL d\'API invalide détectée!');
+  console.warn('📝 L\'URL contient une valeur d\'exemple. Vous devez:');
+  console.warn('   1. Déployer votre backend (voir DEPLOY_BACKEND.md)');
+  console.warn('   2. Configurer REACT_APP_API_URL dans Netlify avec l\'URL réelle');
 }
 
 axios.defaults.baseURL = API_URL;
@@ -26,7 +33,25 @@ axios.interceptors.response.use(
   (error) => {
     if (error.code === 'ERR_NETWORK' || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
       console.error('❌ Erreur de connexion à l\'API:', API_URL);
-      console.error('💡 Vérifiez que REACT_APP_API_URL est correctement configurée dans Netlify');
+      
+      if (isExampleURL) {
+        console.error('⚠️ PROBLÈME: L\'URL de l\'API contient une valeur d\'exemple!');
+        console.error('📋 Étapes à suivre:');
+        console.error('   1. Déployez votre backend sur Railway/Render/Heroku');
+        console.error('   2. Récupérez l\'URL de votre backend (ex: https://xxx.railway.app)');
+        console.error('   3. Dans Netlify → Environment variables');
+        console.error('      Ajoutez: REACT_APP_API_URL = https://xxx.railway.app/api');
+        console.error('   4. Redéployez sur Netlify');
+        console.error('');
+        console.error('📚 Guides disponibles:');
+        console.error('   - DEPLOY_BACKEND.md (déployer le backend)');
+        console.error('   - NETLIFY_SETUP.md (configurer Netlify)');
+      } else {
+        console.error('💡 Vérifiez que:');
+        console.error('   - Le backend est bien déployé et accessible');
+        console.error('   - REACT_APP_API_URL est correctement configurée dans Netlify');
+        console.error('   - L\'URL est accessible depuis votre navigateur');
+      }
     }
     return Promise.reject(error);
   }
