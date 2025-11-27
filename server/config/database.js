@@ -76,7 +76,13 @@ const query = async (sql, params = []) => {
 };
 
 // Getter pour le type de base de données
-const getDatabaseType = () => databaseType;
+const getDatabaseType = () => {
+  // Force Supabase if configured, even if databaseType variable says otherwise
+  if ((process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true') && supabase) {
+    return 'supabase';
+  }
+  return databaseType;
+};
 
 // Getter pour Supabase client
 const getSupabase = () => supabase;
