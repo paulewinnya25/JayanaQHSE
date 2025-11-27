@@ -8,11 +8,10 @@ const router = express.Router();
 
 // Helper function to query users
 const queryUser = async (email) => {
-  const dbType = getDatabaseType();
   const supabase = getSupabase();
   
-  // Force Supabase if URL is configured
-  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || supabase) {
+  // Always use Supabase if available
+  if (supabase) {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -29,20 +28,21 @@ const queryUser = async (email) => {
       console.error('Error querying user with Supabase:', err);
       throw err;
     }
-  } else {
-    const pool = getPool();
-    if (!pool) {
-      throw new Error('No database connection available. Please configure Supabase or PostgreSQL.');
-    }
-    return await pool.query('SELECT * FROM users WHERE email = $1', [email]);
   }
+  
+  // Fallback to PostgreSQL only if Supabase is not available
+  const pool = getPool();
+  if (!pool) {
+    throw new Error('No database connection available. Please configure Supabase or PostgreSQL.');
+  }
+  return await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 };
 
 const queryUserById = async (id) => {
   const supabase = getSupabase();
   
-  // Force Supabase if URL is configured
-  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || supabase) {
+  // Always use Supabase if available
+  if (supabase) {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -59,16 +59,17 @@ const queryUserById = async (id) => {
       console.error('Error querying user by ID with Supabase:', err);
       throw err;
     }
-  } else {
-    const pool = getPool();
-    if (!pool) {
-      throw new Error('No database connection available. Please configure Supabase or PostgreSQL.');
-    }
-    return await pool.query(
-      'SELECT id, email, first_name, last_name, role, chantier_id, phone FROM users WHERE id = $1',
-      [id]
-    );
   }
+  
+  // Fallback to PostgreSQL only if Supabase is not available
+  const pool = getPool();
+  if (!pool) {
+    throw new Error('No database connection available. Please configure Supabase or PostgreSQL.');
+  }
+  return await pool.query(
+    'SELECT id, email, first_name, last_name, role, chantier_id, phone FROM users WHERE id = $1',
+    [id]
+  );
 };
 
 // Register
