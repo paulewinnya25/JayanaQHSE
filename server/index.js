@@ -6,7 +6,16 @@ const { getDatabaseType, getPool, getSupabase } = require('./config/database');
 const app = express();
 
 // Middleware
-app.use(cors());
+// Configuration CORS pour accepter les requêtes depuis Netlify et localhost
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    process.env.FRONTEND_URL,
+    'https://jayanaqhse.netlify.app',
+    /\.netlify\.app$/ // Accepter tous les sous-domaines Netlify
+  ].filter(Boolean), // Filtrer les valeurs undefined
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
