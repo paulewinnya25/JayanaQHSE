@@ -1,13 +1,20 @@
 require('dotenv').config();
 
-const USE_SUPABASE = process.env.USE_SUPABASE === 'true' || process.env.SUPABASE_URL;
+// Debug: Log environment variables
+console.log('🔍 Environment check:');
+console.log('  USE_SUPABASE:', process.env.USE_SUPABASE);
+console.log('  SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
+console.log('  SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+
+const USE_SUPABASE = process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"' || process.env.SUPABASE_URL;
 
 let pool = null;
 let supabase = null;
 let databaseType = 'postgresql';
 
 // Si Supabase est configuré, l'utiliser
-if (USE_SUPABASE) {
+if (USE_SUPABASE || process.env.SUPABASE_URL) {
+  console.log('🔧 Attempting to initialize Supabase...');
   try {
     const { supabase: supabaseClient } = require('./supabase');
     supabase = supabaseClient;
@@ -15,7 +22,10 @@ if (USE_SUPABASE) {
     console.log('✅ Using Supabase database');
   } catch (error) {
     console.error('❌ Error initializing Supabase, falling back to PostgreSQL:', error);
+    console.error('Error details:', error.message, error.stack);
   }
+} else {
+  console.log('⚠️ Supabase not configured. USE_SUPABASE:', process.env.USE_SUPABASE, 'SUPABASE_URL:', process.env.SUPABASE_URL);
 }
 
 // Sinon, utiliser PostgreSQL directement (seulement si Supabase n'est PAS configuré)
