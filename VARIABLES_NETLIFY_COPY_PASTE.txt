@@ -1,0 +1,52 @@
+═══════════════════════════════════════════════════════════════
+  VARIABLES D'ENVIRONNEMENT NETLIFY - À COPIER-COLLER
+═══════════════════════════════════════════════════════════════
+
+🔴 VARIABLE OBLIGATOIRE - À AJOUTER EN PREMIER :
+
+┌─────────────────────────────────────────────────────────────┐
+│ Key:   REACT_APP_API_URL                                    │
+│ Value: https://votre-backend-url.com/api                    │
+│                                                             │
+│ ⚠️ REMPLACEZ "votre-backend-url.com" par l'URL réelle      │
+│    de votre API backend déployée !                          │
+└─────────────────────────────────────────────────────────────┘
+
+───────────────────────────────────────────────────────────────
+
+🟡 VARIABLES SUPABASE (Optionnel - si vous utilisez Supabase) :
+
+┌─────────────────────────────────────────────────────────────┐
+│ Variable 1:                                                 │
+│ Key:   REACT_APP_SUPABASE_URL                               │
+│ Value: https://oerdkjgkmalphmpwoymt.supabase.co            │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ Variable 2:                                                 │
+│ Key:   REACT_APP_SUPABASE_ANON_KEY                          │
+│ Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lcmRramdrbWFscGhtcHdveW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNjUzMDcsImV4cCI6MjA3OTc0MTMwN30.vJfjjWR3c3dDoPmpKtUJppV4cuuBTx51pZl-2jhI7Fo │
+└─────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+  INSTRUCTIONS RAPIDES
+═══════════════════════════════════════════════════════════════
+
+1. Dans Netlify Dashboard :
+   → Site configuration → Environment variables
+
+2. Cliquez sur "Add environment variable"
+
+3. Pour chaque variable :
+   a) Collez le Key dans le champ "Key"
+   b) Collez la Value dans le champ "Value"
+   c) Cliquez sur "Save"
+
+4. Répétez pour chaque variable
+
+5. Après avoir ajouté toutes les variables :
+   → Allez dans "Deploys"
+   → Cliquez sur "Trigger deploy" → "Deploy site"
+
+═══════════════════════════════════════════════════════════════
+

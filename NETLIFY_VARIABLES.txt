@@ -1,0 +1,26 @@
+VARIABLES D'ENVIRONNEMENT NETLIFY - JAYANA QHSE
+================================================
+
+Variables essentielles à ajouter dans Netlify :
+
+1. VARIABLE POUR L'API BACKEND
+   Key: REACT_APP_API_URL
+   Value: https://votre-backend-url.com/api
+   (Remplacez par l'URL de votre API backend déployée)
+
+2. VARIABLES SUPABASE (si vous utilisez Supabase)
+   Key: REACT_APP_SUPABASE_URL
+   Value: https://oerdkjgkmalphmpwoymt.supabase.co
+
+   Key: REACT_APP_SUPABASE_ANON_KEY
+   Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lcmRramdrbWFscGhtcHdveW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNjUzMDcsImV4cCI6MjA3OTc0MTMwN30.vJfjjWR3c3dDoPmpKtUJppV4cuuBTx51pZl-2jhI7Fo
+
+INSTRUCTIONS RAPIDES:
+---------------------
+1. Cliquez sur "Add environment variables" dans Netlify
+2. Pour chaque variable:
+   - Ajoutez le Key (nom de la variable)
+   - Ajoutez la Value (valeur)
+   - Cliquez sur "Save"
+3. Redéployez votre site après avoir ajouté les variables
+
