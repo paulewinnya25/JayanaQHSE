@@ -13,7 +13,24 @@ export const useAuth = () => {
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
+// Log pour le debug (sera supprimé en production)
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔗 API URL configured:', API_URL);
+}
+
 axios.defaults.baseURL = API_URL;
+
+// Gestion globale des erreurs de connexion
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.code === 'ERR_NETWORK' || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+      console.error('❌ Erreur de connexion à l\'API:', API_URL);
+      console.error('💡 Vérifiez que REACT_APP_API_URL est correctement configurée dans Netlify');
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
