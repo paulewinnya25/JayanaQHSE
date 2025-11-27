@@ -18,8 +18,8 @@ if (USE_SUPABASE) {
   }
 }
 
-// Sinon, utiliser PostgreSQL directement
-if (!supabase) {
+// Sinon, utiliser PostgreSQL directement (seulement si Supabase n'est PAS configuré)
+if (!supabase && !USE_SUPABASE) {
   try {
     const { Pool } = require('pg');
     pool = new Pool({
