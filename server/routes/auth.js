@@ -1,10 +1,56 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const pool = require('../config/database');
+const { getDatabaseType, getPool, getSupabase } = require('../config/database');
 const { auth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Helper function to query users
+const queryUser = async (email) => {
+  const dbType = getDatabaseType();
+  
+  if (dbType === 'supabase') {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') {
+      throw error;
+    }
+    return { rows: data ? [data] : [] };
+  } else {
+    const pool = getPool();
+    return await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+  }
+};
+
+const queryUserById = async (id) => {
+  const dbType = getDatabaseType();
+  
+  if (dbType === 'supabase') {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('users')
+      .select('id, email, first_name, last_name, role, chantier_id, phone')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      throw error;
+    }
+    return { rows: data ? [data] : [] };
+  } else {
+    const pool = getPool();
+    return await pool.query(
+      'SELECT id, email, first_name, last_name, role, chantier_id, phone FROM users WHERE id = $1',
+      [id]
+    );
+  }
+};
 
 // Register
 router.post('/register', async (req, res) => {
@@ -12,7 +58,7 @@ router.post('/register', async (req, res) => {
     const { email, password, first_name, last_name, role, chantier_id, phone } = req.body;
 
     // Check if user exists
-    const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const existingUser = await queryUser(email);
     if (existingUser.rows.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -21,10 +67,36 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert user
-    const result = await pool.query(
-      'INSERT INTO users (email, password, first_name, last_name, role, chantier_id, phone) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, first_name, last_name, role, chantier_id',
-      [email, hashedPassword, first_name, last_name, role, chantier_id, phone]
-    );
+    const dbType = getDatabaseType();
+    let result;
+    
+    if (dbType === 'supabase') {
+      const supabase = getSupabase();
+      const { data, error } = await supabase
+        .from('users')
+        .insert({
+          email,
+          password: hashedPassword,
+          first_name,
+          last_name,
+          role,
+          chantier_id,
+          phone
+        })
+        .select('id, email, first_name, last_name, role, chantier_id')
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      result = { rows: [data] };
+    } else {
+      const pool = getPool();
+      result = await pool.query(
+        'INSERT INTO users (email, password, first_name, last_name, role, chantier_id, phone) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, email, first_name, last_name, role, chantier_id',
+        [email, hashedPassword, first_name, last_name, role, chantier_id, phone]
+      );
+    }
 
     const token = jwt.sign(
       { userId: result.rows[0].id },
@@ -37,8 +109,8 @@ router.post('/register', async (req, res) => {
       user: result.rows[0]
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Register error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -47,7 +119,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await queryUser(email);
     
     if (result.rows.length === 0) {
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -78,22 +150,22 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
 // Get current user
 router.get('/me', auth, async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT id, email, first_name, last_name, role, chantier_id, phone FROM users WHERE id = $1',
-      [req.user.id]
-    );
+    const result = await queryUserById(req.user.id);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
     res.json(result.rows[0]);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Get me error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
