@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -8,10 +8,6 @@ import {
   Card,
   CardContent,
   Paper,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   TextField,
   Table,
   TableBody,
@@ -22,10 +18,9 @@ import {
 } from '@mui/material';
 import {
   PictureAsPdf as PdfIcon,
-  TableChart as TableIcon,
   GetApp as DownloadIcon,
 } from '@mui/icons-material';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import Layout from '../components/Layout';
@@ -41,11 +36,7 @@ export default function Reports() {
     end_date: new Date().toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    fetchReportData();
-  }, []);
-
-  const fetchReportData = async () => {
+  const fetchReportData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get('/reports/dashboard', {
@@ -57,7 +48,11 @@ export default function Reports() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchReportData();
+  }, [fetchReportData]);
 
   const handleFilterChange = (field, value) => {
     setFilters({ ...filters, [field]: value });
