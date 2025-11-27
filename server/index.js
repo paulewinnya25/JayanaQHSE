@@ -45,28 +45,31 @@ app.use('/api/trainings', require('./routes/trainings'));
 
 // Health check
 app.get('/api/health', async (req, res) => {
-  const dbType = getDatabaseType();
   const supabase = getSupabase();
   
-  // Force check if Supabase is actually configured
-  const actualDbType = (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true') && supabase ? 'supabase' : dbType;
+  // Force Supabase if configured
+  let dbType = 'postgresql';
+  if ((process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"') && supabase) {
+    dbType = 'supabase';
+  }
   
   console.log('🏥 Health check:', { 
     dbType, 
-    actualDbType, 
     hasSupabase: !!supabase,
     useSupabaseEnv: process.env.USE_SUPABASE,
-    supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'NOT SET'
+    supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+    supabaseClientAvailable: !!supabase
   });
   
   res.json({ 
     status: 'OK', 
     message: 'Jayana qhse API is running',
-    database: actualDbType,
+    database: dbType,
     supabaseConfigured: !!supabase,
     environment: {
       USE_SUPABASE: process.env.USE_SUPABASE,
-      SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET'
+      SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET'
     }
   });
 });
