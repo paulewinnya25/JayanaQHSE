@@ -4,7 +4,7 @@
   
   # Commande de build (installe les dépendances et build le client React)
   # Netlify Functions nécessitent aussi les dépendances du serveur
-  command = "npm install && cd client && npm install && npm run build && cd .. && npm install --workspace=server"
+  command = "npm install && cd client && npm install && npm run build && cd .. && npm install --workspace=server && cd netlify/functions && npm install && cd ../.."
   
   # Dossier publié (output du build React)
   publish = "client/build"

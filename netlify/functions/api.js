@@ -4,7 +4,16 @@
 const express = require('express');
 const serverless = require('serverless-http');
 const cors = require('cors');
+const path = require('path');
+
+// Charger les variables d'environnement
 require('dotenv').config();
+
+// Ajouter le chemin du serveur au require path pour que les modules soient trouvés
+const serverPath = path.join(__dirname, '../../server');
+process.env.NODE_PATH = process.env.NODE_PATH 
+  ? `${process.env.NODE_PATH}:${serverPath}`
+  : serverPath;
 
 // Importer le serveur Express existant
 const app = express();
@@ -78,12 +87,57 @@ module.exports.handler = async (event, context) => {
   // Netlify Functions nécessitent que context.callbackWaitsForEmptyEventLoop = false
   context.callbackWaitsForEmptyEventLoop = false;
   
-  // Netlify route /api/* vers cette fonction, donc on doit ajuster le path
-  // Si le path commence par /api, on le retire pour que Express puisse router correctement
-  if (event.path && event.path.startsWith('/api')) {
-    event.path = event.path.replace('/api', '') || '/';
+  // Log pour le débogage
+  console.log('📥 Netlify Function called:', {
+    path: event.path,
+    rawPath: event.rawPath,
+    httpMethod: event.httpMethod,
+    queryStringParameters: event.queryStringParameters
+  });
+  
+  // Netlify route /api/* vers cette fonction via la redirection
+  // Le path dans event.path sera comme "/api/auth/login"
+  // On doit le transformer en "/auth/login" pour Express
+  if (event.path) {
+    // Retirer /api du début du path
+    if (event.path.startsWith('/api')) {
+      event.path = event.path.replace(/^\/api/, '') || '/';
+    }
+    // Aussi mettre à jour rawPath si présent
+    if (event.rawPath && event.rawPath.startsWith('/api')) {
+      event.rawPath = event.rawPath.replace(/^\/api/, '') || '/';
+    }
   }
   
-  return await handler(event, context);
+  // Si le path est vide après suppression de /api, utiliser rawPath
+  if (!event.path || event.path === '/') {
+    if (event.rawPath) {
+      event.path = event.rawPath.replace(/^\/api/, '') || '/';
+    }
+  }
+  
+  try {
+    const result = await handler(event, context);
+    console.log('✅ Function response status:', result?.statusCode || 'unknown');
+    return result;
+  } catch (error) {
+    console.error('❌ Netlify Function Error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    return {
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify({
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        path: event.path
+      })
+    };
+  }
 };
 
