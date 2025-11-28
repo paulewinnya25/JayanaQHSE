@@ -40,15 +40,33 @@ const queryUser = async (email) => {
     console.log('⚠️ Forcing Supabase initialization in queryUser...');
     // Recharger dotenv pour s'assurer que les variables sont chargées
     require('dotenv').config();
-    // Réessayer d'obtenir le client
+    // Réessayer d'obtenir le client directement
     const { getSupabaseClient } = require('../config/supabase');
     const forcedClient = getSupabaseClient();
     if (forcedClient) {
       console.log('✅ Supabase client forced initialization successful');
-      // Mettre à jour la variable locale
-      const { getSupabase: getSupabaseFromDB } = require('../config/database');
-      // Forcer la réinitialisation dans database.js
-      return queryUser(email); // Réessayer avec le client forcé
+      // Utiliser directement le client forcé
+      try {
+        const { data, error } = await forcedClient
+          .from('users')
+          .select('*')
+          .eq('email', email)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('❌ Supabase queryUser error (forced):', error);
+          if (error.code === 'PGRST116') {
+            return { rows: [] };
+          }
+          throw error;
+        }
+        
+        console.log('✅ User found with Supabase (forced):', data ? 'yes' : 'no');
+        return { rows: data ? [data] : [] };
+      } catch (err) {
+        console.error('❌ Error querying user with Supabase (forced):', err);
+        throw err;
+      }
     }
   }
   
