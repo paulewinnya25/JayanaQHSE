@@ -83,15 +83,29 @@ const query = async (sql, params = []) => {
 
 // Getter pour le type de base de données
 const getDatabaseType = () => {
-  // Force Supabase if configured, even if databaseType variable says otherwise
-  if ((process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true') && supabase) {
+  // Normaliser USE_SUPABASE comme au démarrage
+  const useSupabaseRaw = process.env.USE_SUPABASE?.trim().replace(/^["']|["']$/g, '') || '';
+  const useSupabase = useSupabaseRaw === 'true' || !!process.env.SUPABASE_URL;
+  
+  // Force Supabase if configured and client is available
+  if ((useSupabase || process.env.SUPABASE_URL) && supabase) {
     return 'supabase';
   }
   return databaseType;
 };
 
 // Getter pour Supabase client
-const getSupabase = () => supabase;
+const getSupabase = () => {
+  console.log('🔍 getSupabase called:', {
+    supabaseIsNull: supabase === null,
+    supabaseIsUndefined: supabase === undefined,
+    hasSupabase: !!supabase,
+    databaseType,
+    USE_SUPABASE,
+    hasSupabaseUrl: !!process.env.SUPABASE_URL
+  });
+  return supabase;
+};
 
 // Getter pour PostgreSQL pool
 const getPool = () => pool;
