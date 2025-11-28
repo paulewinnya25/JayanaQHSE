@@ -56,7 +56,7 @@ export default function Login() {
     >
       <Container maxWidth="sm">
         <Paper
-          elevation={24}
+          elevation={0}
           sx={{
             padding: { xs: 3, sm: 5 },
             width: '100%',

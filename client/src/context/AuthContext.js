@@ -94,9 +94,34 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
       return { success: true };
     } catch (error) {
+      // Log détaillé pour le diagnostic
+      console.error('❌ Erreur de connexion:', {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data,
+        status: error.response?.status,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        fullError: error,
+      });
+
+      // Messages d'erreur plus détaillés
+      let errorMessage = 'Erreur de connexion';
+      
+      if (error.code === 'ERR_NETWORK' || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
+        errorMessage = 'Impossible de se connecter au serveur. Vérifiez que REACT_APP_API_URL est configurée dans Netlify.';
+        console.error('💡 Solution: Vérifiez la variable REACT_APP_API_URL dans Netlify → Environment variables');
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Email ou mot de passe incorrect';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Erreur serveur. Vérifiez les logs du backend.';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
       return {
         success: false,
-        message: error.response?.data?.message || 'Erreur de connexion',
+        message: errorMessage,
       };
     }
   };

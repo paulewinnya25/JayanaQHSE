@@ -16,6 +16,7 @@ VALUES (
   'QHSE',
   'superviseur_qhse'
 )
+
 ON CONFLICT (email) DO UPDATE
 SET 
   password = EXCLUDED.password,

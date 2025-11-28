@@ -6,6 +6,56 @@
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Jayana qhse - Application de gestion QHSE pour le BTP" />
     <title>Jayana qhse</title>
+    <script>
+      // Intercepter les erreurs AVANT que React ne charge
+      (function() {
+        'use strict';
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        // Filtrer les erreurs non-critiques
+        console.error = function(...args) {
+          const message = args[0]?.toString() || '';
+          const fullMessage = args.map(arg => String(arg)).join(' ');
+          
+          // Ignorer les erreurs SVG viewBox (provenant de scripts externes)
+          if (message.includes('attribute viewBox') && message.includes('Expected number')) {
+            return;
+          }
+          if (fullMessage.includes('attribute viewBox') && fullMessage.includes('Expected number')) {
+            return;
+          }
+          
+          // Ignorer les erreurs WebSocket (outils de développement)
+          if (message.includes('WebSocket is already in CLOSING') || 
+              message.includes('WebSocket is already in CLOSED')) {
+            return;
+          }
+          if (fullMessage.includes('WebSocket is already in CLOSING') || 
+              fullMessage.includes('WebSocket is already in CLOSED')) {
+            return;
+          }
+          
+          // Appeler la fonction originale pour les vraies erreurs
+          originalError.apply(console, args);
+        };
+        
+        // Filtrer les avertissements non-critiques
+        console.warn = function(...args) {
+          const message = args[0]?.toString() || '';
+          const fullMessage = args.map(arg => String(arg)).join(' ');
+          
+          // Ignorer les avertissements de Tracking Prevention (fonctionnalité du navigateur)
+          if (message.includes('Tracking Prevention blocked') || 
+              fullMessage.includes('Tracking Prevention blocked')) {
+            return;
+          }
+          
+          // Appeler la fonction originale pour les vrais avertissements
+          originalWarn.apply(console, args);
+        };
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

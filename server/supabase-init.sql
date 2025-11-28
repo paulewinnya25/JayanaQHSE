@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
+
 -- Chantiers table
 CREATE TABLE IF NOT EXISTS chantiers (
   id SERIAL PRIMARY KEY,
@@ -239,9 +241,22 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 -- ATTENTION: À modifier pour la production selon vos besoins de sécurité
 
 -- Policy pour users (tous peuvent lire, seuls les admins peuvent modifier)
-CREATE POLICY "Users can view all users" ON users FOR SELECT USING (true);
-CREATE POLICY "Admins can insert users" ON users FOR INSERT WITH CHECK (true);
-CREATE POLICY "Admins can update users" ON users FOR UPDATE USING (true);
+-- Supprimer toutes les policies existantes pour users
+DO $$ 
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT policyname FROM pg_policies WHERE tablename = 'users' AND schemaname = 'public') 
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON users', r.policyname);
+    END LOOP;
+END $$;
+
+-- Créer les nouvelles policies avec des noms simples
+CREATE POLICY "users_select" ON users FOR SELECT USING (true);
+CREATE POLICY "users_insert" ON users FOR INSERT WITH CHECK (true);
+CREATE POLICY "users_update" ON users FOR UPDATE USING (true);
+CREATE POLICY "users_delete" ON users FOR DELETE USING (true);
 
 -- Répétez pour les autres tables selon vos besoins
 -- Pour le développement, vous pouvez désactiver temporairement RLS

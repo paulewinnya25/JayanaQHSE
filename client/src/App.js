@@ -211,6 +211,32 @@ function AppRoutes() {
 }
 
 function App() {
+  // Suppress non-critical console errors
+  React.useEffect(() => {
+    // Suppress WebSocket errors from dev tools/extensions
+    const originalError = console.error;
+    console.error = (...args) => {
+      const message = args[0]?.toString() || '';
+      // Suppress WebSocket closing errors (from dev tools/extensions)
+      if (message.includes('WebSocket is already in CLOSING or CLOSED state')) {
+        return;
+      }
+      // Suppress SVG viewBox errors from external scripts (osano.js)
+      if (message.includes('attribute viewBox') && message.includes('Expected number')) {
+        return;
+      }
+      // Suppress tracking prevention warnings (browser privacy feature)
+      if (message.includes('Tracking Prevention blocked')) {
+        return;
+      }
+      originalError.apply(console, args);
+    };
+
+    return () => {
+      console.error = originalError;
+    };
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
