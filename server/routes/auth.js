@@ -8,23 +8,20 @@ const router = express.Router();
 
 // Helper function to query users
 const queryUser = async (email) => {
-  // Force Supabase if environment variables are set
-  const useSupabase = process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"';
+  // Use getDatabaseType() to determine which database to use
+  const dbType = getDatabaseType();
+  const supabase = getSupabase();
   
-  if (useSupabase) {
-    const supabase = getSupabase();
-    console.log('🔍 Supabase check:', { 
-      useSupabase, 
-      hasSupabaseClient: !!supabase,
-      supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
-      useSupabaseEnv: process.env.USE_SUPABASE
-    });
-    
-    if (!supabase) {
-      console.error('❌ Supabase URL configured but client is null. Check SUPABASE_ANON_KEY.');
-      throw new Error('Supabase client not available. Please check your environment variables.');
-    }
-    
+  console.log('🔍 Database check:', { 
+    dbType,
+    hasSupabaseClient: !!supabase,
+    supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+    useSupabaseEnv: process.env.USE_SUPABASE,
+    hasSupabaseUrl: !!process.env.SUPABASE_URL
+  });
+  
+  // Use Supabase if database type is supabase
+  if (dbType === 'supabase' && supabase) {
     try {
       console.log('🔍 Querying user with Supabase:', email);
       const { data, error } = await supabase
@@ -50,6 +47,12 @@ const queryUser = async (email) => {
     }
   }
   
+  // If Supabase is configured but not available, throw error
+  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"') {
+    console.error('❌ Supabase is configured but client is not available');
+    throw new Error('Supabase is configured but client is not available. Please check SUPABASE_ANON_KEY in Railway variables.');
+  }
+  
   // Fallback to PostgreSQL only if Supabase is not configured
   console.warn('⚠️ Using PostgreSQL fallback. Supabase should be configured.');
   const pool = getPool();
@@ -60,13 +63,12 @@ const queryUser = async (email) => {
 };
 
 const queryUserById = async (id) => {
-  // Force Supabase if environment variables are set
-  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true') {
-    const supabase = getSupabase();
-    if (!supabase) {
-      throw new Error('Supabase client not available. Please check your environment variables.');
-    }
-    
+  // Use getDatabaseType() to determine which database to use
+  const dbType = getDatabaseType();
+  const supabase = getSupabase();
+  
+  // Use Supabase if database type is supabase
+  if (dbType === 'supabase' && supabase) {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -85,12 +87,12 @@ const queryUserById = async (id) => {
     }
   }
   
-  // Fallback to PostgreSQL only if Supabase is not configured
-  // If Supabase is configured but failed, don't fallback - throw error instead
-  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true') {
+  // If Supabase is configured but not available, throw error
+  if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"') {
     throw new Error('Supabase is configured but client is not available. Please check SUPABASE_ANON_KEY in Railway variables.');
   }
   
+  // Fallback to PostgreSQL only if Supabase is not configured
   const pool = getPool();
   if (!pool) {
     throw new Error('No database connection available. Please configure Supabase or PostgreSQL.');
