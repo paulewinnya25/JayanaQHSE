@@ -79,9 +79,16 @@ const adminQuery = async (sql, params = []) => {
   return query(sql, params);
 };
 
+// Export: utiliser les fonctions getter pour lazy loading
+// Ne pas appeler getSupabaseClient() ici car les variables d'env peuvent ne pas être disponibles
 module.exports = {
-  supabase: getSupabaseClient(),
-  supabaseAdmin: getSupabaseAdminClient(),
+  // Export des getters pour lazy initialization
+  get supabase() {
+    return getSupabaseClient();
+  },
+  get supabaseAdmin() {
+    return getSupabaseAdminClient();
+  },
   getSupabaseClient,
   getSupabaseAdminClient,
   query,
