@@ -18,25 +18,46 @@ let pool = null;
 let supabase = null;
 let databaseType = 'postgresql';
 
-// Si Supabase est configuré, l'utiliser
-if (USE_SUPABASE || process.env.SUPABASE_URL) {
-  console.log('🔧 Attempting to initialize Supabase...');
-  try {
-    const { supabase: supabaseClient } = require('./supabase');
-    supabase = supabaseClient;
-    if (supabase) {
-      databaseType = 'supabase';
-      console.log('✅ Using Supabase database');
-    } else {
-      console.error('❌ Supabase client is null after initialization');
+// Fonction pour initialiser Supabase
+const initializeSupabase = () => {
+  // Re-vérifier les variables à chaque fois
+  const useSupabaseRaw = process.env.USE_SUPABASE?.trim().replace(/^["']|["']$/g, '') || '';
+  const useSupabase = useSupabaseRaw === 'true' || !!process.env.SUPABASE_URL;
+  
+  if (useSupabase || process.env.SUPABASE_URL) {
+    console.log('🔧 Attempting to initialize Supabase...');
+    console.log('🔧 Environment at init:', {
+      USE_SUPABASE: process.env.USE_SUPABASE,
+      SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+      useSupabase
+    });
+    try {
+      // Clear le cache du module pour forcer le rechargement
+      delete require.cache[require.resolve('./supabase')];
+      const { supabase: supabaseClient } = require('./supabase');
+      if (supabaseClient) {
+        supabase = supabaseClient;
+        databaseType = 'supabase';
+        console.log('✅ Using Supabase database');
+        console.log('✅ Supabase client initialized:', !!supabase);
+        return true;
+      } else {
+        console.error('❌ Supabase client is null after initialization');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error initializing Supabase, falling back to PostgreSQL:', error);
+      console.error('Error details:', error.message, error.stack);
+      return false;
     }
-  } catch (error) {
-    console.error('❌ Error initializing Supabase, falling back to PostgreSQL:', error);
-    console.error('Error details:', error.message, error.stack);
+  } else {
+    console.log('⚠️ Supabase not configured. USE_SUPABASE:', process.env.USE_SUPABASE, 'SUPABASE_URL:', process.env.SUPABASE_URL);
+    return false;
   }
-} else {
-  console.log('⚠️ Supabase not configured. USE_SUPABASE:', process.env.USE_SUPABASE, 'SUPABASE_URL:', process.env.SUPABASE_URL);
-}
+};
+
+// Initialiser Supabase au démarrage
+initializeSupabase();
 
 // Ne créer le pool PostgreSQL que si Supabase n'est PAS configuré
 if (!supabase && (!USE_SUPABASE && !process.env.SUPABASE_URL)) {
@@ -96,13 +117,29 @@ const getDatabaseType = () => {
 
 // Getter pour Supabase client
 const getSupabase = () => {
+  // Re-vérifier les variables d'environnement à chaque appel
+  const useSupabaseRaw = process.env.USE_SUPABASE?.trim().replace(/^["']|["']$/g, '') || '';
+  const useSupabase = useSupabaseRaw === 'true' || !!process.env.SUPABASE_URL;
+  
+  // Si supabase est null mais que les variables sont configurées, réessayer l'initialisation
+  if (!supabase && (useSupabase || process.env.SUPABASE_URL)) {
+    console.log('⚠️ Supabase client is null, reinitializing...');
+    console.log('⚠️ Environment check:', {
+      USE_SUPABASE: process.env.USE_SUPABASE,
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      useSupabase
+    });
+    initializeSupabase();
+  }
+  
   console.log('🔍 getSupabase called:', {
     supabaseIsNull: supabase === null,
     supabaseIsUndefined: supabase === undefined,
     hasSupabase: !!supabase,
     databaseType,
-    USE_SUPABASE,
-    hasSupabaseUrl: !!process.env.SUPABASE_URL
+    useSupabase,
+    hasSupabaseUrl: !!process.env.SUPABASE_URL,
+    currentSupabaseValue: supabase ? 'exists' : 'null'
   });
   return supabase;
 };
