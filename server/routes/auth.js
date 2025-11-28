@@ -1,6 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+// S'assurer que dotenv est chargé AVANT de charger database
+require('dotenv').config();
 const { getDatabaseType, getPool, getSupabase } = require('../config/database');
 const { auth } = require('../middleware/auth');
 
@@ -8,6 +10,16 @@ const router = express.Router();
 
 // Helper function to query users
 const queryUser = async (email) => {
+  // S'assurer que dotenv est chargé (pour le développement local)
+  // Sur Railway, les variables sont déjà dans process.env
+  if (typeof require !== 'undefined') {
+    try {
+      require('dotenv').config();
+    } catch (e) {
+      // Ignore si dotenv n'est pas disponible
+    }
+  }
+  
   // Use getDatabaseType() to determine which database to use
   const dbType = getDatabaseType();
   const supabase = getSupabase();
@@ -16,8 +28,11 @@ const queryUser = async (email) => {
     dbType,
     hasSupabaseClient: !!supabase,
     supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+    supabaseUrlValue: process.env.SUPABASE_URL,
     useSupabaseEnv: process.env.USE_SUPABASE,
-    hasSupabaseUrl: !!process.env.SUPABASE_URL
+    useSupabaseEnvType: typeof process.env.USE_SUPABASE,
+    hasSupabaseUrl: !!process.env.SUPABASE_URL,
+    allEnvKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('USE_SUPABASE'))
   });
   
   // Use Supabase if database type is supabase
