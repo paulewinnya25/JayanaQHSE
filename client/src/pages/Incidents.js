@@ -33,6 +33,13 @@ import {
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
   ExpandMore as ExpandMoreIcon,
+  Warning as WarningIcon,
+  Event as EventIcon,
+  LocationOn as LocationOnIcon,
+  Description as DescriptionIcon,
+  Search as SearchIcon,
+  FindInPage as FindInPageIcon,
+  Build as BuildIcon,
 } from '@mui/icons-material';
 import axios from 'axios';
 import { toast } from 'react-toastify';
@@ -451,85 +458,320 @@ export default function Incidents() {
           </DialogActions>
         </Dialog>
 
-        {/* View Dialog */}
-        <Dialog open={viewDialog} onClose={handleClose} maxWidth="md" fullWidth>
-          <DialogTitle sx={{ fontWeight: 700, fontSize: '1.5rem' }}>
-            Détails de l'Incident
-          </DialogTitle>
-          <DialogContent>
-            {selectedIncident && (
-              <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Typography variant="h6">{selectedIncident.title}</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Type
+        {/* View Dialog - Amélioré */}
+        <Dialog 
+          open={viewDialog} 
+          onClose={() => setViewDialog(false)} 
+          maxWidth="lg" 
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 4,
+              boxShadow: '0 20px 60px 0 rgba(0, 0, 0, 0.3)',
+              overflow: 'hidden',
+            },
+          }}
+        >
+          {selectedIncident && (
+            <>
+              <DialogTitle
+                sx={{
+                  background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '1.5rem',
+                  py: 3,
+                  px: 4,
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 4,
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
+                  },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box
+                    sx={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      bgcolor: 'rgba(255,255,255,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <WarningIcon sx={{ fontSize: 28, color: 'white' }} />
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                      {selectedIncident.title}
                     </Typography>
-                    <Typography>{selectedIncident.type}</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                      <Chip
+                        label={selectedIncident.type || 'Non spécifié'}
+                        size="small"
+                        sx={{
+                          bgcolor: 'rgba(255,255,255,0.2)',
+                          color: 'white',
+                          fontWeight: 600,
+                        }}
+                      />
+                      <Chip
+                        label={selectedIncident.severity || 'Non spécifié'}
+                        size="small"
+                        sx={{
+                          bgcolor: selectedIncident.severity === 'grave' 
+                            ? 'rgba(239, 68, 68, 0.9)' 
+                            : selectedIncident.severity === 'moyen'
+                            ? 'rgba(245, 158, 11, 0.9)'
+                            : 'rgba(34, 197, 94, 0.9)',
+                          color: 'white',
+                          fontWeight: 600,
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                </Box>
+              </DialogTitle>
+              <DialogContent sx={{ p: 0 }}>
+                <Box sx={{ p: 4 }}>
+                  {/* Informations principales */}
+                  <Grid container spacing={3} sx={{ mb: 4 }}>
+                    <Grid item xs={12} md={6}>
+                      <Card
+                        elevation={0}
+                        sx={{
+                          p: 2.5,
+                          borderRadius: 3,
+                          bgcolor: 'grey.50',
+                          border: '1px solid',
+                          borderColor: 'grey.200',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            bgcolor: 'grey.100',
+                            transform: 'translateY(-2px)',
+                            boxShadow: 2,
+                          },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                          <EventIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            Date de l'incident
+                          </Typography>
+                        </Box>
+                        <Typography variant="body1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                          {selectedIncident.date_incident
+                            ? new Date(selectedIncident.date_incident).toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'long',
+                                year: 'numeric',
+                              })
+                            : 'Non spécifiée'}
+                        </Typography>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Card
+                        elevation={0}
+                        sx={{
+                          p: 2.5,
+                          borderRadius: 3,
+                          bgcolor: 'grey.50',
+                          border: '1px solid',
+                          borderColor: 'grey.200',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            bgcolor: 'grey.100',
+                            transform: 'translateY(-2px)',
+                            boxShadow: 2,
+                          },
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                          <LocationOnIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+                          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                            Localisation
+                          </Typography>
+                        </Box>
+                        <Typography variant="body1" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                          {selectedIncident.location || 'Non spécifiée'}
+                        </Typography>
+                      </Card>
+                    </Grid>
                   </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Gravité
-                    </Typography>
-                    <Typography>{selectedIncident.severity}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Date
-                    </Typography>
-                    <Typography>
-                      {selectedIncident.date_incident
-                        ? new Date(selectedIncident.date_incident).toLocaleDateString('fr-FR')
-                        : '-'}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Localisation
-                    </Typography>
-                    <Typography>{selectedIncident.location || '-'}</Typography>
-                  </Grid>
-                </Grid>
-                {selectedIncident.description && (
-                  <>
-                    <Typography variant="caption" color="text.secondary">
-                      Description
-                    </Typography>
-                    <Typography>{selectedIncident.description}</Typography>
-                  </>
-                )}
-                {selectedIncident.investigation && (
-                  <>
-                    <Typography variant="caption" color="text.secondary">
-                      Enquête
-                    </Typography>
-                    <Typography>{selectedIncident.investigation}</Typography>
-                  </>
-                )}
-                {selectedIncident.root_cause && (
-                  <>
-                    <Typography variant="caption" color="text.secondary">
-                      Cause racine
-                    </Typography>
-                    <Typography>{selectedIncident.root_cause}</Typography>
-                  </>
-                )}
-                {selectedIncident.corrective_actions && (
-                  <>
-                    <Typography variant="caption" color="text.secondary">
-                      Actions correctives
-                    </Typography>
-                    <Typography>{selectedIncident.corrective_actions}</Typography>
-                  </>
-                )}
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose} sx={{ textTransform: 'none' }}>
-              Fermer
-            </Button>
-          </DialogActions>
+
+                  {/* Description */}
+                  {selectedIncident.description && (
+                    <Box sx={{ mb: 4 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                        <DescriptionIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                          Description
+                        </Typography>
+                      </Box>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 3,
+                          borderRadius: 2,
+                          bgcolor: 'grey.50',
+                          border: '1px solid',
+                          borderColor: 'grey.200',
+                        }}
+                      >
+                        <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.secondary' }}>
+                          {selectedIncident.description}
+                        </Typography>
+                      </Paper>
+                    </Box>
+                  )}
+
+                  {/* Enquête */}
+                  {selectedIncident.investigation && (
+                    <Box sx={{ mb: 4 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                        <SearchIcon sx={{ color: 'primary.main', fontSize: 24 }} />
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                          Enquête
+                        </Typography>
+                      </Box>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 3,
+                          borderRadius: 2,
+                          bgcolor: 'grey.50',
+                          border: '1px solid',
+                          borderColor: 'grey.200',
+                        }}
+                      >
+                        <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.secondary' }}>
+                          {selectedIncident.investigation}
+                        </Typography>
+                      </Paper>
+                    </Box>
+                  )}
+
+                  {/* Cause racine */}
+                  {selectedIncident.root_cause && (
+                    <Box sx={{ mb: 4 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                        <FindInPageIcon sx={{ color: 'error.main', fontSize: 24 }} />
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                          Cause Racine
+                        </Typography>
+                      </Box>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 3,
+                          borderRadius: 2,
+                          bgcolor: 'error.50',
+                          border: '1px solid',
+                          borderColor: 'error.200',
+                        }}
+                      >
+                        <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.secondary' }}>
+                          {selectedIncident.root_cause}
+                        </Typography>
+                      </Paper>
+                    </Box>
+                  )}
+
+                  {/* Actions correctives */}
+                  {selectedIncident.corrective_actions && (
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
+                        <BuildIcon sx={{ color: 'success.main', fontSize: 24 }} />
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                          Actions Correctives
+                        </Typography>
+                      </Box>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 3,
+                          borderRadius: 2,
+                          bgcolor: 'success.50',
+                          border: '1px solid',
+                          borderColor: 'success.200',
+                        }}
+                      >
+                        <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.secondary' }}>
+                          {selectedIncident.corrective_actions}
+                        </Typography>
+                      </Paper>
+                    </Box>
+                  )}
+                </Box>
+              </DialogContent>
+              <DialogActions sx={{ p: 3, pt: 2, bgcolor: 'grey.50', borderTop: '1px solid', borderColor: 'grey.200' }}>
+                <Button
+                  onClick={() => setViewDialog(false)}
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 2,
+                    px: 4,
+                    py: 1,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    borderColor: 'grey.300',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      bgcolor: 'primary.50',
+                    },
+                  }}
+                >
+                  Fermer
+                </Button>
+                <Button
+                  onClick={() => {
+                    setViewDialog(false);
+                    setEditing(selectedIncident);
+                    setFormData({
+                      title: selectedIncident.title || '',
+                      type: selectedIncident.type || '',
+                      severity: selectedIncident.severity || '',
+                      date_incident: selectedIncident.date_incident
+                        ? new Date(selectedIncident.date_incident).toISOString().split('T')[0]
+                        : '',
+                      location: selectedIncident.location || '',
+                      description: selectedIncident.description || '',
+                      investigation: selectedIncident.investigation || '',
+                      root_cause: selectedIncident.root_cause || '',
+                      corrective_actions: selectedIncident.corrective_actions || '',
+                    });
+                    setOpen(true);
+                  }}
+                  variant="contained"
+                  sx={{
+                    borderRadius: 2,
+                    px: 4,
+                    py: 1,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    background: 'linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)',
+                    boxShadow: '0 4px 15px 0 rgba(14, 165, 233, 0.4)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
+                      boxShadow: '0 6px 20px 0 rgba(14, 165, 233, 0.5)',
+                      transform: 'translateY(-2px)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  Modifier
+                </Button>
+              </DialogActions>
+            </>
+          )}
         </Dialog>
       </Box>
     </Layout>
