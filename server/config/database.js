@@ -3,10 +3,16 @@ require('dotenv').config();
 // Debug: Log environment variables
 console.log('🔍 Environment check:');
 console.log('  USE_SUPABASE:', process.env.USE_SUPABASE);
+console.log('  USE_SUPABASE type:', typeof process.env.USE_SUPABASE);
+console.log('  USE_SUPABASE trimmed:', process.env.USE_SUPABASE?.trim());
 console.log('  SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
+console.log('  SUPABASE_URL value:', process.env.SUPABASE_URL);
 console.log('  SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+console.log('  SUPABASE_ANON_KEY length:', process.env.SUPABASE_ANON_KEY?.length);
 
-const USE_SUPABASE = process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"' || process.env.SUPABASE_URL;
+// Normaliser USE_SUPABASE (enlever guillemets et espaces)
+const useSupabaseRaw = process.env.USE_SUPABASE?.trim().replace(/^["']|["']$/g, '') || '';
+const USE_SUPABASE = useSupabaseRaw === 'true' || !!process.env.SUPABASE_URL;
 
 let pool = null;
 let supabase = null;
