@@ -3,7 +3,8 @@
   base = "."
   
   # Commande de build (installe les dépendances et build le client React)
-  command = "cd client && npm install && npm run build"
+  # Netlify Functions nécessitent aussi les dépendances du serveur
+  command = "npm install && cd client && npm install && npm run build && cd .. && npm install --workspace=server"
   
   # Dossier publié (output du build React)
   publish = "client/build"
@@ -12,7 +13,22 @@
   # Version de Node.js
   NODE_VERSION = "18"
 
+# Configuration des fonctions Netlify
+[functions]
+  # Dossier contenant les fonctions
+  directory = "netlify/functions"
+  
+  # Timeout pour les fonctions (en secondes)
+  node_bundler = "esbuild"
+
 # Redirections pour React Router (SPA)
+# Les routes API sont gérées par Netlify Functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+# Redirection pour toutes les autres routes vers React
 [[redirects]]
   from = "/*"
   to = "/index.html"

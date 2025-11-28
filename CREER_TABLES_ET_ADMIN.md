@@ -59,3 +59,4 @@
 **Exécutez ces 3 scripts dans l'ordre dans Supabase SQL Editor !** ✅
 
 
+

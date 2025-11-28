@@ -78,3 +78,4 @@ Les policies seront :
 **Exécutez le script dans Supabase SQL Editor maintenant !** ✅
 
 
+

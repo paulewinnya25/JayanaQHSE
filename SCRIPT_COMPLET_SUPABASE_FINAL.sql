@@ -69,3 +69,4 @@ WHERE email = 'admin@qhse.com';
 -- Vous devriez voir 1 utilisateur au total, dont 1 admin
 
 
+

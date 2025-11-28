@@ -24,3 +24,4 @@ CREATE POLICY "users_delete" ON users FOR DELETE USING (true);
 SELECT policyname, cmd, qual FROM pg_policies WHERE tablename = 'users';
 
 
+

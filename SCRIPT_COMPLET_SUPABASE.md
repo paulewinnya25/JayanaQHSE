@@ -43,3 +43,4 @@ Exécutez ce script pour créer l'utilisateur admin :
 **Exécutez ces 3 scripts dans Supabase SQL Editor maintenant !** ✅
 
 
+

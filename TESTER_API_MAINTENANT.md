@@ -95,3 +95,4 @@ https://votre-url-railway.app/api/health
 **Le serveur fonctionne avec Supabase ! Testez maintenant l'API ! 🚀**
 
 
+

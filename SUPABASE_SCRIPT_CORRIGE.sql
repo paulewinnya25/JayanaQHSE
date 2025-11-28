@@ -35,3 +35,4 @@ CREATE POLICY "Admins can update users" ON users FOR UPDATE USING (true);
 CREATE POLICY "Admins can delete users" ON users FOR DELETE USING (true);
 
 
+

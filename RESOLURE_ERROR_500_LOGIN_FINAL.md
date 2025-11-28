@@ -66,3 +66,4 @@ Erreur 500 lors du login : `POST /api/auth/login 500 (Internal Server Error)`
 **Regardez les logs Railway maintenant pendant une tentative de login !** 🔍
 
 
+

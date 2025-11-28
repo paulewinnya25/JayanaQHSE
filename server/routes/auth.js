@@ -11,7 +11,7 @@ const router = express.Router();
 // Helper function to query users
 const queryUser = async (email) => {
   // S'assurer que dotenv est chargé (pour le développement local)
-  // Sur Railway, les variables sont déjà dans process.env
+  // En production, les variables sont déjà dans process.env
   if (typeof require !== 'undefined') {
     try {
       require('dotenv').config();
@@ -65,7 +65,7 @@ const queryUser = async (email) => {
   // If Supabase is configured but not available, throw error
   if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"') {
     console.error('❌ Supabase is configured but client is not available');
-    throw new Error('Supabase is configured but client is not available. Please check SUPABASE_ANON_KEY in Railway variables.');
+    throw new Error('Supabase is configured but client is not available. Please check SUPABASE_ANON_KEY in environment variables.');
   }
   
   // Fallback to PostgreSQL only if Supabase is not configured
@@ -104,7 +104,7 @@ const queryUserById = async (id) => {
   
   // If Supabase is configured but not available, throw error
   if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"') {
-    throw new Error('Supabase is configured but client is not available. Please check SUPABASE_ANON_KEY in Railway variables.');
+    throw new Error('Supabase is configured but client is not available. Please check SUPABASE_ANON_KEY in environment variables.');
   }
   
   // Fallback to PostgreSQL only if Supabase is not configured

@@ -73,3 +73,4 @@ Les logs montrent que Supabase fonctionne correctement. Maintenant, il faut cré
 **Exécutez le script SQL dans Supabase maintenant, puis testez le login !** 🚀
 
 
+
