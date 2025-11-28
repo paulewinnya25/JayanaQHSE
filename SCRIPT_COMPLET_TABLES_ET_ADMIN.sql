@@ -1,9 +1,10 @@
 -- =============================================
--- SCRIPT URGENT : Créer Tables et Admin dans Supabase
--- Exécutez ce script dans Supabase SQL Editor MAINTENANT
+-- SCRIPT COMPLET : Créer Tables et Admin dans Supabase
+-- Exécutez ce script dans Supabase SQL Editor
+-- URL: https://supabase.com/dashboard/project/oerdkjgkmalphmpwoymt/sql/new
 -- =============================================
 
--- 1. Créer la table users
+-- 1. Créer la table users (avec UUID)
 CREATE TABLE IF NOT EXISTS users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -17,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 2. Activer RLS
+-- 2. Activer RLS (Row Level Security)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 -- 3. Supprimer toutes les policies existantes
@@ -31,19 +32,19 @@ BEGIN
     END LOOP;
 END $$;
 
--- 4. Créer les policies permissives
+-- 4. Créer les policies permissives (pour permettre toutes les opérations)
 CREATE POLICY "users_select" ON users FOR SELECT USING (true);
 CREATE POLICY "users_insert" ON users FOR INSERT WITH CHECK (true);
 CREATE POLICY "users_update" ON users FOR UPDATE USING (true);
 CREATE POLICY "users_delete" ON users FOR DELETE USING (true);
 
--- 5. Créer l'utilisateur admin (password: admin123)
+-- 5. Créer l'utilisateur admin avec admin@jayana.com (password: admin123)
 INSERT INTO users (email, password, first_name, last_name, role)
 VALUES (
-  'admin@qhse.com',
+  'admin@jayana.com',
   '$2a$10$4eoOVCkbPTo9i8yR26u6RuMAgzHvrNOmVJbAO46nfs/mADPBCNhqa',
   'Admin',
-  'QHSE',
+  'Jayana',
   'superviseur_qhse'
 )
 ON CONFLICT (email) DO UPDATE
@@ -53,8 +54,9 @@ SET
   last_name = EXCLUDED.last_name,
   role = EXCLUDED.role;
 
--- 6. Vérifier
-SELECT 'Table created' as status, COUNT(*) as user_count FROM users;
-SELECT 'Admin exists' as status FROM users WHERE email = 'admin@qhse.com';
-
+-- 6. Vérifier que tout est créé
+SELECT 'Table users created' as status, COUNT(*) as user_count FROM users;
+SELECT 'Admin user exists' as status, email, first_name, last_name, role 
+FROM users 
+WHERE email = 'admin@jayana.com';
 
