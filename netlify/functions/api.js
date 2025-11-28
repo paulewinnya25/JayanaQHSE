@@ -98,6 +98,15 @@ module.exports.handler = async (event, context) => {
   // Netlify Functions nécessitent que context.callbackWaitsForEmptyEventLoop = false
   context.callbackWaitsForEmptyEventLoop = false;
   
+  // Log des variables d'environnement à chaque appel (pour débogage)
+  console.log('🔍 Environment check in handler:', {
+    SUPABASE_URL: process.env.SUPABASE_URL ? 'SET (' + process.env.SUPABASE_URL.substring(0, 30) + '...)' : 'NOT SET',
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET (' + process.env.SUPABASE_ANON_KEY.length + ' chars)' : 'NOT SET',
+    USE_SUPABASE: process.env.USE_SUPABASE,
+    JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+    NODE_ENV: process.env.NODE_ENV
+  });
+  
   // Log pour le débogage
   console.log('📥 Netlify Function called:', {
     path: event.path,
