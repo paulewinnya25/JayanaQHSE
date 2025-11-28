@@ -34,7 +34,8 @@ const initializeSupabase = () => {
     try {
       // Clear le cache du module pour forcer le rechargement
       delete require.cache[require.resolve('./supabase')];
-      const { supabase: supabaseClient } = require('./supabase');
+      const { getSupabaseClient } = require('./supabase');
+      const supabaseClient = getSupabaseClient();
       if (supabaseClient) {
         supabase = supabaseClient;
         databaseType = 'supabase';
@@ -43,6 +44,7 @@ const initializeSupabase = () => {
         return true;
       } else {
         console.error('❌ Supabase client is null after initialization');
+        console.error('❌ Check SUPABASE_URL and SUPABASE_ANON_KEY environment variables');
         return false;
       }
     } catch (error) {

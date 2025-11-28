@@ -1,17 +1,57 @@
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://oerdkjgkmalphmpwoymt.supabase.co';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lcmRramdrbWFscGhtcHdveW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNjUzMDcsImV4cCI6MjA3OTc0MTMwN30.vJfjjWR3c3dDoPmpKtUJppV4cuuBTx51pZl-2jhI7Fo';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || null;
+// Variables d'environnement avec fallback
+const getSupabaseUrl = () => process.env.SUPABASE_URL || 'https://oerdkjgkmalphmpwoymt.supabase.co';
+const getSupabaseAnonKey = () => process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9lcmRramdrbWFscGhtcHdveW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNjUzMDcsImV4cCI6MjA3OTc0MTMwN30.vJfjjWR3c3dDoPmpKtUJppV4cuuBTx51pZl-2jhI7Fo';
+const getSupabaseServiceKey = () => process.env.SUPABASE_SERVICE_ROLE_KEY || null;
 
-// Client pour les opérations côté client (anon key)
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Clients Supabase (initialisés de manière lazy)
+let supabase = null;
+let supabaseAdmin = null;
 
-// Client pour les opérations admin (service role key)
-const supabaseAdmin = supabaseServiceKey 
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : null;
+// Fonction pour obtenir le client Supabase (lazy initialization)
+const getSupabaseClient = () => {
+  if (!supabase) {
+    const supabaseUrl = getSupabaseUrl();
+    const supabaseAnonKey = getSupabaseAnonKey();
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('❌ SUPABASE_URL or SUPABASE_ANON_KEY not set');
+      return null;
+    }
+    
+    console.log('🔧 Initializing Supabase client...', {
+      url: supabaseUrl ? 'SET' : 'NOT SET',
+      key: supabaseAnonKey ? 'SET' : 'NOT SET'
+    });
+    
+    supabase = createClient(supabaseUrl, supabaseAnonKey);
+    console.log('✅ Supabase client initialized');
+  }
+  return supabase;
+};
+
+// Fonction pour obtenir le client admin Supabase (lazy initialization)
+const getSupabaseAdminClient = () => {
+  if (!supabaseAdmin) {
+    const supabaseServiceKey = getSupabaseServiceKey();
+    if (supabaseServiceKey) {
+      const supabaseUrl = getSupabaseUrl();
+      supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+      console.log('✅ Supabase admin client initialized');
+    }
+  }
+  return supabaseAdmin;
+};
+
+// Initialiser les clients au chargement si les variables sont disponibles
+// (pour compatibilité avec le code existant)
+const supabaseUrl = getSupabaseUrl();
+const supabaseAnonKey = getSupabaseAnonKey();
+if (supabaseUrl && supabaseAnonKey) {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+}
 
 // Helper pour exécuter des requêtes SQL brutes
 const query = async (sql, params = []) => {
@@ -40,8 +80,10 @@ const adminQuery = async (sql, params = []) => {
 };
 
 module.exports = {
-  supabase,
-  supabaseAdmin,
+  supabase: getSupabaseClient(),
+  supabaseAdmin: getSupabaseAdminClient(),
+  getSupabaseClient,
+  getSupabaseAdminClient,
   query,
   adminQuery,
 };

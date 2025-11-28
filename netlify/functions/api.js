@@ -7,7 +7,18 @@ const cors = require('cors');
 const path = require('path');
 
 // Charger les variables d'environnement
+// Dans Netlify Functions, les variables d'environnement sont déjà disponibles
+// mais on charge dotenv pour le développement local
 require('dotenv').config();
+
+// Log des variables d'environnement pour le débogage (sans exposer les clés)
+console.log('🔍 Environment variables check:', {
+  SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET (' + process.env.SUPABASE_ANON_KEY.length + ' chars)' : 'NOT SET',
+  USE_SUPABASE: process.env.USE_SUPABASE,
+  JWT_SECRET: process.env.JWT_SECRET ? 'SET' : 'NOT SET',
+  NODE_ENV: process.env.NODE_ENV
+});
 
 // Ajouter le chemin du serveur au require path pour que les modules soient trouvés
 const serverPath = path.join(__dirname, '../../server');
