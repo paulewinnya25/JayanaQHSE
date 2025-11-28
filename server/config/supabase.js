@@ -50,7 +50,9 @@ const getSupabaseAdminClient = () => {
 const supabaseUrl = getSupabaseUrl();
 const supabaseAnonKey = getSupabaseAnonKey();
 if (supabaseUrl && supabaseAnonKey) {
+  console.log('🔧 Initializing Supabase client at module load...');
   supabase = createClient(supabaseUrl, supabaseAnonKey);
+  console.log('✅ Supabase client initialized at module load');
 }
 
 // Helper pour exécuter des requêtes SQL brutes

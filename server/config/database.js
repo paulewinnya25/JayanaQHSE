@@ -59,8 +59,12 @@ const initializeSupabase = () => {
   }
 };
 
-// Ne pas initialiser au démarrage, on le fera à la demande
-// initializeSupabase();
+// Initialiser Supabase au démarrage si les variables sont disponibles
+// Cela garantit que Supabase est prêt dès le démarrage
+if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"') {
+  console.log('🔧 Auto-initializing Supabase at startup...');
+  initializeSupabase();
+}
 
 // Ne créer le pool PostgreSQL que si Supabase n'est PAS configuré
 if (!supabase && (!USE_SUPABASE && !process.env.SUPABASE_URL)) {

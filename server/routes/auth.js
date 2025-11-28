@@ -35,6 +35,23 @@ const queryUser = async (email) => {
     allEnvKeys: Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('USE_SUPABASE'))
   });
   
+  // Forcer l'initialisation si les variables sont présentes mais le client n'est pas disponible
+  if (!supabase && (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true')) {
+    console.log('⚠️ Forcing Supabase initialization in queryUser...');
+    // Recharger dotenv pour s'assurer que les variables sont chargées
+    require('dotenv').config();
+    // Réessayer d'obtenir le client
+    const { getSupabaseClient } = require('../config/supabase');
+    const forcedClient = getSupabaseClient();
+    if (forcedClient) {
+      console.log('✅ Supabase client forced initialization successful');
+      // Mettre à jour la variable locale
+      const { getSupabase: getSupabaseFromDB } = require('../config/database');
+      // Forcer la réinitialisation dans database.js
+      return queryUser(email); // Réessayer avec le client forcé
+    }
+  }
+  
   // Use Supabase if database type is supabase
   if (dbType === 'supabase' && supabase) {
     try {
