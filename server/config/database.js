@@ -61,9 +61,19 @@ const initializeSupabase = () => {
 
 // Initialiser Supabase au démarrage si les variables sont disponibles
 // Cela garantit que Supabase est prêt dès le démarrage
-if (process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"') {
+// Dans Netlify Functions, on initialise à la demande car les variables peuvent ne pas être disponibles au chargement du module
+const shouldInitSupabase = process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"';
+if (shouldInitSupabase) {
   console.log('🔧 Auto-initializing Supabase at startup...');
-  initializeSupabase();
+  console.log('🔧 Environment at startup:', {
+    SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET (' + (process.env.SUPABASE_ANON_KEY?.length || 0) + ' chars)' : 'NOT SET',
+    USE_SUPABASE: process.env.USE_SUPABASE
+  });
+  const initialized = initializeSupabase();
+  if (!initialized) {
+    console.warn('⚠️ Supabase initialization failed at startup, will retry on first use');
+  }
 }
 
 // Ne créer le pool PostgreSQL que si Supabase n'est PAS configuré
@@ -122,7 +132,7 @@ const getDatabaseType = () => {
   return databaseType;
 };
 
-// Getter pour Supabase client (lazy initialization)
+// Getter pour Supabase client (lazy initialization avec retry)
 const getSupabase = () => {
   // Re-vérifier les variables d'environnement à chaque appel
   const useSupabaseRaw = process.env.USE_SUPABASE?.trim().replace(/^["']|["']$/g, '') || '';
@@ -130,21 +140,22 @@ const getSupabase = () => {
   
   // Si supabase est null mais que les variables sont configurées, réessayer l'initialisation
   if (!supabase && (useSupabase || process.env.SUPABASE_URL)) {
-    console.log('⚠️ Supabase client is null, initializing now...');
+    console.log('⚠️ Supabase client is null, forcing initialization...');
     console.log('⚠️ Environment check:', {
       USE_SUPABASE: process.env.USE_SUPABASE,
-      SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+      SUPABASE_URL: process.env.SUPABASE_URL ? 'SET (' + process.env.SUPABASE_URL.substring(0, 30) + '...)' : 'NOT SET',
       SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET (' + (process.env.SUPABASE_ANON_KEY?.length || 0) + ' chars)' : 'NOT SET',
       useSupabase
     });
     
-    // Essayer d'initialiser
-    const initialized = initializeSupabase();
+    // Essayer d'initialiser via initializeSupabase
+    let initialized = initializeSupabase();
     
     if (!initialized) {
-      console.error('❌ Failed to initialize Supabase client');
+      console.error('❌ Failed to initialize Supabase via initializeSupabase, trying direct call...');
       // Essayer directement avec getSupabaseClient
       try {
+        // Clear cache et recharger
         delete require.cache[require.resolve('./supabase')];
         const { getSupabaseClient } = require('./supabase');
         const client = getSupabaseClient();
@@ -152,10 +163,19 @@ const getSupabase = () => {
           supabase = client;
           databaseType = 'supabase';
           console.log('✅ Supabase client initialized via direct call');
+          initialized = true;
+        } else {
+          console.error('❌ getSupabaseClient returned null');
         }
       } catch (err) {
-        console.error('❌ Error getting Supabase client directly:', err);
+        console.error('❌ Error getting Supabase client directly:', err.message);
+        console.error('❌ Error stack:', err.stack);
       }
+    }
+    
+    if (!initialized && !supabase) {
+      console.error('❌ All Supabase initialization attempts failed');
+      console.error('❌ Check that SUPABASE_URL and SUPABASE_ANON_KEY are correctly set');
     }
   }
   

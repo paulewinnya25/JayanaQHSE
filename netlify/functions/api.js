@@ -70,13 +70,26 @@ app.use('/trainings', require('../../server/routes/trainings'));
 
 // Health check
 app.get('/health', async (req, res) => {
-  const { getSupabase } = require('../../server/config/database');
-  const supabase = getSupabase();
+  // Forcer le rechargement des modules pour s'assurer que les variables sont chargées
+  delete require.cache[require.resolve('../../server/config/database')];
+  delete require.cache[require.resolve('../../server/config/supabase')];
   
-  let dbType = 'postgresql';
-  if ((process.env.SUPABASE_URL || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '"true"') && supabase) {
-    dbType = 'supabase';
-  }
+  // Recharger dotenv pour s'assurer que les variables sont disponibles
+  require('dotenv').config();
+  
+  const { getSupabase, getDatabaseType } = require('../../server/config/database');
+  
+  // Forcer l'initialisation de Supabase
+  const supabase = getSupabase();
+  const dbType = getDatabaseType();
+  
+  console.log('🏥 Health check details:', {
+    dbType,
+    hasSupabase: !!supabase,
+    supabaseUrl: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY ? 'SET (' + process.env.SUPABASE_ANON_KEY.length + ' chars)' : 'NOT SET',
+    useSupabase: process.env.USE_SUPABASE
+  });
   
   res.json({ 
     status: 'OK', 
@@ -86,7 +99,7 @@ app.get('/health', async (req, res) => {
     environment: {
       USE_SUPABASE: process.env.USE_SUPABASE,
       SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'NOT SET'
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET (' + process.env.SUPABASE_ANON_KEY.length + ' chars)' : 'NOT SET'
     }
   });
 });
