@@ -211,11 +211,16 @@ const createQueryWrapper = () => {
       query: async (sql, params = []) => {
         // Pour Supabase, on ne peut pas exécuter du SQL arbitraire
         // Les routes doivent être adaptées pour utiliser les méthodes Supabase
-        // Pour l'instant, on retourne une erreur explicite
         console.error('❌ Direct SQL queries not supported with Supabase');
-        console.error('❌ SQL attempted:', sql);
+        console.error('❌ SQL attempted:', sql.substring(0, 200));
         console.error('❌ This route needs to be adapted to use Supabase methods');
-        throw new Error('Direct SQL queries are not supported with Supabase. Please use Supabase client methods instead.');
+        console.error('❌ See ADAPTER_ROUTES_SUPABASE.md for migration guide');
+        
+        // Retourner une erreur plus descriptive
+        const error = new Error('Direct SQL queries are not supported with Supabase. Routes need to be adapted to use Supabase client methods. See ADAPTER_ROUTES_SUPABASE.md');
+        error.code = 'SUPABASE_SQL_NOT_SUPPORTED';
+        error.sql = sql.substring(0, 200);
+        throw error;
       }
     };
   } else {

@@ -202,6 +202,23 @@ module.exports.handler = async (event, context) => {
       console.error('❌ Missing module:', error.message);
     }
     
+    // Si c'est une erreur Supabase SQL, donner un message plus clair
+    if (error.code === 'SUPABASE_SQL_NOT_SUPPORTED') {
+      return {
+        statusCode: 501, // Not Implemented
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          message: 'This route needs to be adapted for Supabase',
+          error: 'Direct SQL queries are not supported with Supabase. The route needs to be migrated to use Supabase client methods.',
+          path: event.path,
+          code: 'ROUTE_NOT_ADAPTED'
+        })
+      };
+    }
+    
     return {
       statusCode: 500,
       headers: {
@@ -212,6 +229,7 @@ module.exports.handler = async (event, context) => {
         message: 'Internal server error',
         error: error.message,
         path: event.path,
+        code: error.code,
         // En production, on peut montrer l'erreur pour le débogage
         details: process.env.NODE_ENV !== 'production' ? error.stack : undefined
       })
