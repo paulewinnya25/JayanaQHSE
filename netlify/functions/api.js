@@ -20,11 +20,25 @@ console.log('🔍 Environment variables check:', {
   NODE_ENV: process.env.NODE_ENV
 });
 
-// Ajouter le chemin du serveur au require path pour que les modules soient trouvés
-const serverPath = path.join(__dirname, '../../server');
-process.env.NODE_PATH = process.env.NODE_PATH 
-  ? `${process.env.NODE_PATH}:${serverPath}`
-  : serverPath;
+// Résoudre les chemins absolus pour les modules du serveur
+// Dans Netlify Functions, __dirname pointe vers /var/task/netlify/functions
+const serverPath = path.resolve(__dirname, '../../server');
+const configPath = path.resolve(__dirname, '../../server/config');
+
+// Ajouter les chemins au module.paths pour que require() puisse les trouver
+if (!module.paths.includes(serverPath)) {
+  module.paths.push(serverPath);
+}
+if (!module.paths.includes(configPath)) {
+  module.paths.push(configPath);
+}
+
+console.log('📁 Paths configured:', {
+  __dirname,
+  serverPath,
+  configPath,
+  modulePaths: module.paths.slice(0, 3) // Afficher seulement les 3 premiers
+});
 
 // Importer le serveur Express existant
 const app = express();
@@ -52,32 +66,43 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes - importer depuis le serveur existant
+// Routes - importer depuis le serveur existant avec chemins absolus
 // Note: Netlify Functions route déjà vers /api, donc on utilise les chemins sans /api
-app.use('/auth', require('../../server/routes/auth'));
-app.use('/dashboard', require('../../server/routes/dashboard'));
-app.use('/contractors', require('../../server/routes/contractors'));
-app.use('/documents', require('../../server/routes/documents'));
-app.use('/environment', require('../../server/routes/environment'));
-app.use('/incidents', require('../../server/routes/incidents'));
-app.use('/inspections', require('../../server/routes/inspections'));
-app.use('/maintenance', require('../../server/routes/maintenance'));
-app.use('/non-conformities', require('../../server/routes/nonConformities'));
-app.use('/notifications', require('../../server/routes/notifications'));
-app.use('/reports', require('../../server/routes/reports'));
-app.use('/risks', require('../../server/routes/risks'));
-app.use('/trainings', require('../../server/routes/trainings'));
+const routesPath = path.resolve(__dirname, '../../server/routes');
+
+app.use('/auth', require(path.join(routesPath, 'auth')));
+app.use('/dashboard', require(path.join(routesPath, 'dashboard')));
+app.use('/contractors', require(path.join(routesPath, 'contractors')));
+app.use('/documents', require(path.join(routesPath, 'documents')));
+app.use('/environment', require(path.join(routesPath, 'environment')));
+app.use('/incidents', require(path.join(routesPath, 'incidents')));
+app.use('/inspections', require(path.join(routesPath, 'inspections')));
+app.use('/maintenance', require(path.join(routesPath, 'maintenance')));
+app.use('/non-conformities', require(path.join(routesPath, 'nonConformities')));
+app.use('/notifications', require(path.join(routesPath, 'notifications')));
+app.use('/reports', require(path.join(routesPath, 'reports')));
+app.use('/risks', require(path.join(routesPath, 'risks')));
+app.use('/trainings', require(path.join(routesPath, 'trainings')));
 
 // Health check
 app.get('/health', async (req, res) => {
-  // Forcer le rechargement des modules pour s'assurer que les variables sont chargées
-  delete require.cache[require.resolve('../../server/config/database')];
-  delete require.cache[require.resolve('../../server/config/supabase')];
-  
-  // Recharger dotenv pour s'assurer que les variables sont disponibles
-  require('dotenv').config();
-  
-  const { getSupabase, getDatabaseType } = require('../../server/config/database');
+  try {
+    // Utiliser des chemins absolus pour charger les modules
+    const databasePath = path.resolve(__dirname, '../../server/config/database');
+    const supabasePath = path.resolve(__dirname, '../../server/config/supabase');
+    
+    // Forcer le rechargement des modules pour s'assurer que les variables sont chargées
+    if (require.cache[databasePath]) {
+      delete require.cache[databasePath];
+    }
+    if (require.cache[supabasePath]) {
+      delete require.cache[supabasePath];
+    }
+    
+    // Recharger dotenv pour s'assurer que les variables sont disponibles
+    require('dotenv').config();
+    
+    const { getSupabase, getDatabaseType } = require(databasePath);
   
   // Forcer l'initialisation de Supabase
   const supabase = getSupabase();
@@ -91,17 +116,26 @@ app.get('/health', async (req, res) => {
     useSupabase: process.env.USE_SUPABASE
   });
   
-  res.json({ 
-    status: 'OK', 
-    message: 'Jayana qhse API is running',
-    database: dbType,
-    supabaseConfigured: !!supabase,
-    environment: {
-      USE_SUPABASE: process.env.USE_SUPABASE,
-      SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
-      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET (' + process.env.SUPABASE_ANON_KEY.length + ' chars)' : 'NOT SET'
-    }
-  });
+    res.json({ 
+      status: 'OK', 
+      message: 'Jayana qhse API is running',
+      database: dbType,
+      supabaseConfigured: !!supabase,
+      environment: {
+        USE_SUPABASE: process.env.USE_SUPABASE,
+        SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'NOT SET',
+        SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET (' + process.env.SUPABASE_ANON_KEY.length + ' chars)' : 'NOT SET'
+      }
+    });
+  } catch (error) {
+    console.error('❌ Health check error:', error);
+    res.status(500).json({
+      status: 'ERROR',
+      message: 'Health check failed',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
 });
 
 // Convertir l'app Express en fonction serverless
