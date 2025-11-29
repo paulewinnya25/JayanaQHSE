@@ -191,8 +191,17 @@ module.exports.handler = async (event, context) => {
     console.error('❌ Netlify Function Error:', {
       message: error.message,
       stack: error.stack,
-      name: error.name
+      name: error.name,
+      path: event.path,
+      httpMethod: event.httpMethod
     });
+    
+    // Si c'est une erreur de module non trouvé, donner plus de détails
+    if (error.message.includes('Cannot find module')) {
+      console.error('❌ Module not found error. Check that all dependencies are bundled.');
+      console.error('❌ Missing module:', error.message);
+    }
+    
     return {
       statusCode: 500,
       headers: {
@@ -201,8 +210,10 @@ module.exports.handler = async (event, context) => {
       },
       body: JSON.stringify({
         message: 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-        path: event.path
+        error: error.message,
+        path: event.path,
+        // En production, on peut montrer l'erreur pour le débogage
+        details: process.env.NODE_ENV !== 'production' ? error.stack : undefined
       })
     };
   }

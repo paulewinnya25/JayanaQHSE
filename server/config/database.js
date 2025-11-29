@@ -195,11 +195,44 @@ const getSupabase = () => {
 // Getter pour PostgreSQL pool
 const getPool = () => pool;
 
+// Wrapper pour compatibilité avec les routes existantes
+// Les routes utilisent pool.query(), on doit créer un wrapper
+const createQueryWrapper = () => {
+  const dbType = getDatabaseType();
+  
+  if (dbType === 'supabase') {
+    const supabase = getSupabase();
+    if (!supabase) {
+      throw new Error('Supabase client not available');
+    }
+    
+    // Retourner un objet qui simule pool.query() pour compatibilité
+    return {
+      query: async (sql, params = []) => {
+        // Pour Supabase, on ne peut pas exécuter du SQL arbitraire
+        // Les routes doivent être adaptées pour utiliser les méthodes Supabase
+        // Pour l'instant, on retourne une erreur explicite
+        console.error('❌ Direct SQL queries not supported with Supabase');
+        console.error('❌ SQL attempted:', sql);
+        console.error('❌ This route needs to be adapted to use Supabase methods');
+        throw new Error('Direct SQL queries are not supported with Supabase. Please use Supabase client methods instead.');
+      }
+    };
+  } else {
+    const pool = getPool();
+    if (!pool) {
+      throw new Error('PostgreSQL pool not available');
+    }
+    return pool;
+  }
+};
+
 module.exports = {
   query,
-  pool,
+  pool: createQueryWrapper(), // Wrapper pour compatibilité
   supabase,
   getDatabaseType,
   getSupabase,
   getPool,
+  createQueryWrapper, // Exporter aussi la fonction pour usage direct
 };
