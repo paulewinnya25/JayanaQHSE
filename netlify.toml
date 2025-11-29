@@ -19,7 +19,8 @@
   directory = "netlify/functions"
   
   # Timeout pour les fonctions (en secondes)
-  node_bundler = "esbuild"
+  # Utiliser nft (Node Function Bundler) au lieu d'esbuild pour inclure tous les fichiers
+  node_bundler = "nft"
 
 # Redirections pour React Router (SPA)
 # Les routes API sont gérées par Netlify Functions
