@@ -1,6 +1,6 @@
 # ✅ Routes Adaptées pour Supabase
 
-## Routes complètement adaptées ✅
+## ✅ Routes complètement adaptées (11/11)
 
 - ✅ `server/routes/risks.js` - Toutes les opérations CRUD
 - ✅ `server/routes/incidents.js` - Toutes les opérations CRUD
@@ -9,15 +9,14 @@
 - ✅ `server/routes/environment.js` - Toutes les opérations CRUD
 - ✅ `server/routes/contractors.js` - Toutes les opérations CRUD
 - ✅ `server/routes/documents.js` - Toutes les opérations CRUD + validation
+- ✅ `server/routes/trainings.js` - CRUD complet avec gestion participants et COUNT
+- ✅ `server/routes/maintenance.js` - CRUD complet avec sous-requêtes et COUNT
+- ✅ `server/routes/reports.js` - Rapports avec agrégations calculées côté application
+- ✅ `server/routes/dashboard.js` - Dashboard avec agrégations complexes et calculs
 
-## Routes restantes (nécessitent agrégations complexes)
+## 🎉 Toutes les routes sont maintenant adaptées pour Supabase !
 
-- ⏳ `server/routes/trainings.js` - Nécessite adaptation pour COUNT et GROUP BY
-- ⏳ `server/routes/maintenance.js` - Nécessite adaptation pour sous-requêtes et COUNT
-- ⏳ `server/routes/reports.js` - Nécessite adaptation pour agrégations multiples
-- ⏳ `server/routes/dashboard.js` - Nécessite adaptation pour agrégations complexes et calculs
-
-**Note :** Ces routes fonctionnent toujours avec PostgreSQL en fallback. Elles peuvent être adaptées progressivement selon les besoins.
+**Note :** Toutes les routes ont un fallback PostgreSQL pour compatibilité.
 
 ## Pattern utilisé
 
